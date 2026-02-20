@@ -1,4 +1,4 @@
-import { Github, Linkedin, Twitter, Facebook, Instagram, Youtube } from "lucide-react";
+import { Github, Linkedin, Twitter, Facebook, Instagram } from "lucide-react";
 
 const Footer = () => (
   <footer className="py-12 border-t border-border bg-surface/30">
@@ -9,7 +9,7 @@ const Footer = () => (
         </p>
         <div className="flex gap-4">
           <a
-            href="https://github.com"
+            href="https://github.com/zKushal"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
@@ -18,7 +18,7 @@ const Footer = () => (
             <Github size={18} />
           </a>
           <a
-            href="https://linkedin.com"
+            href="https://www.linkedin.com/in/kushal-bhandari-a67b5530a/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
@@ -27,7 +27,7 @@ const Footer = () => (
             <Linkedin size={18} />
           </a>
           <a
-            href="https://twitter.com"
+            href="https://x.com/KushalB81950209"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
@@ -36,7 +36,7 @@ const Footer = () => (
             <Twitter size={18} />
           </a>
           <a
-            href="https://facebook.com"
+            href="https://www.facebook.com/kushal.bhandari.3551380"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
@@ -45,7 +45,7 @@ const Footer = () => (
             <Facebook size={18} />
           </a>
           <a
-            href="https://instagram.com"
+            href="https://www.instagram.com/impullstackdeveloper?igsh=MWIxcHc5bHFpdHZ6aA=="
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
@@ -53,15 +53,7 @@ const Footer = () => (
           >
             <Instagram size={18} />
           </a>
-          <a
-            href="https://youtube.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-muted-foreground hover:text-primary transition-colors"
-            title="YouTube"
-          >
-            <Youtube size={18} />
-          </a>
+          
         </div>
       </div>
     </div>

@@ -1,10 +1,100 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Mail, MapPin, Send, Github, Linkedin, Twitter, Facebook, Instagram } from "lucide-react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const Contact = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: ""
+  });
+  const [status, setStatus] = useState<"idle" | "validating" | "loading" | "success" | "error">("idle");
+  const [statusMessage, setStatusMessage] = useState("");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const validateEmail = async (email: string): Promise<boolean> => {
+    try {
+      setStatus("validating");
+      const response = await fetch(`${API_URL}/validate-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      return data.valid;
+    } catch (error) {
+      console.error("Email validation error:", error);
+      setStatus("error");
+      setStatusMessage("Failed to validate email. Please try again.");
+      setTimeout(() => setStatus("idle"), 3000);
+      return false;
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      setStatus("error");
+      setStatusMessage("Please fill in all fields");
+      setTimeout(() => setStatus("idle"), 3000);
+      return;
+    }
+
+    // Validate email first
+    const isValidEmail = await validateEmail(formData.email);
+    if (!isValidEmail) {
+      setStatus("error");
+      setStatusMessage("Please enter a valid email address");
+      setTimeout(() => setStatus("idle"), 3000);
+      return;
+    }
+
+    setStatus("loading");
+
+    try {
+      const response = await fetch(`${API_URL}/send-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setStatus("success");
+        setStatusMessage("Message sent successfully! I'll get back to you soon.");
+        setFormData({ name: "", email: "", subject: "", message: "" });
+        setTimeout(() => setStatus("idle"), 3000);
+      } else {
+        setStatus("error");
+        setStatusMessage(data.message || "Failed to send message. Please try again later.");
+        setTimeout(() => setStatus("idle"), 3000);
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      setStatus("error");
+      setStatusMessage("Failed to send message. Please try again later.");
+      setTimeout(() => setStatus("idle"), 3000);
+    }
+  };
 
   return (
     <section id="contact" className="section-padding bg-surface/50">
@@ -94,35 +184,65 @@ const Contact = () => {
 
             <form
               className="md:col-span-3 space-y-5"
-              onSubmit={(e) => e.preventDefault()}
+              onSubmit={handleSubmit}
             >
               <div className="grid sm:grid-cols-2 gap-5">
                 <input
                   type="text"
+                  name="name"
                   placeholder="Name"
+                  value={formData.name}
+                  onChange={handleChange}
                   className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                 />
                 <input
                   type="email"
+                  name="email"
                   placeholder="Email"
+                  value={formData.email}
+                  onChange={handleChange}
                   className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
                 />
               </div>
               <input
                 type="text"
+                name="subject"
                 placeholder="Subject"
+                value={formData.subject}
+                onChange={handleChange}
                 className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors"
               />
               <textarea
                 rows={5}
+                name="message"
                 placeholder="Your message..."
+                value={formData.message}
+                onChange={handleChange}
                 className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
               />
+              
+              {status !== "idle" && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className={`p-3 rounded-lg text-sm font-medium ${
+                    status === "success"
+                      ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                      : status === "error"
+                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                      : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                  }`}
+                >
+                  {statusMessage}
+                </motion.div>
+              )}
+              
               <button
                 type="submit"
-                className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity glow"
+                disabled={status === "loading"}
+                className="flex items-center gap-2 px-8 py-3 bg-primary text-primary-foreground font-semibold rounded-lg hover:opacity-90 transition-opacity glow disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Send Message <Send size={16} />
+                {status === "loading" ? "Sending..." : "Send Message"} <Send size={16} />
               </button>
             </form>
           </div>

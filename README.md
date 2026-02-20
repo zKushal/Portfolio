@@ -1,73 +1,170 @@
-# Welcome to your Lovable project
+# Kushal's Portfolio
 
-## Project info
+A modern, interactive portfolio website showcasing projects and skills in full-stack development and machine learning.
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+## 📁 Project Structure
 
-## How can I edit this code?
+```
+Portfolio/
+├── frontend/              # React + TypeScript frontend (Vite)
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── ...
+│
+├── backend/               # Node.js + Express API server
+│   ├── server.js
+│   ├── package.json
+│   ├── .env               # (You need to create this)
+│   └── .env.example
+│
+├── docs/                  # Documentation & guides
+│   ├── BACKEND_EMAIL_SETUP.md
+│   ├── EMAILJS_SETUP.md
+│   └── SETUP_AND_RUN.md
+│
+└── README.md             # This file
+```
 
-There are several ways of editing your application.
+## 🚀 Quick Start (3 Commands)
 
-**Use Lovable**
+### Step 1: Setup Backend Email (.env)
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+Create `backend/.env`:
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SENDER_EMAIL=kushalbhandari803@gmail.com
+SENDER_PASSWORD=your-16-char-app-password
+PORT=5000
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+[Get Gmail App Password →](docs/BACKEND_EMAIL_SETUP.md)
 
-**Use your preferred IDE**
+### Step 2: Start Frontend
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
+cd frontend
+npm install    # If not already installed
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+**Frontend runs on:** `http://localhost:8080`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Step 3: Start Backend (New Terminal)
 
-**Use GitHub Codespaces**
+```bash
+cd backend
+npm install    # If not already installed
+npm run dev
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+**Backend runs on:** `http://localhost:5000`
 
-## What technologies are used for this project?
+## 📋 Available Commands
 
-This project is built with:
+### Frontend
+```bash
+cd frontend
 
-- Vite
+npm run dev        # Start development server
+npm run build      # Build for production
+npm run preview    # Preview production build
+npm run lint       # Run ESLint
+npm test           # Run tests
+```
+
+### Backend
+```bash
+cd backend
+
+npm run dev        # Start with auto-reload (nodemon)
+npm start          # Start production
+```
+
+## 🛠 Tech Stack
+
+### Frontend
+- React 18
 - TypeScript
-- React
-- shadcn-ui
+- Vite
 - Tailwind CSS
+- Shadcn UI
+- Framer Motion
+- Three.js
 
-## How can I deploy this project?
+### Backend
+- Node.js
+- Express.js
+- Nodemailer
+- CORS
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+## 📧 Contact Form Features
 
-## Can I connect a custom domain to my Lovable project?
+✅ **Email Validation** - Checks if email domain exists  
+✅ **Direct Sending** - Sends emails to kushalbhandari803@gmail.com  
+✅ **Reply Support** - You can reply directly to user's email  
+✅ **User Feedback** - Shows success/error messages  
+✅ **Secure** - Validates all inputs before sending  
 
-Yes, you can!
+## 📚 Documentation
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+- [Backend Email Setup](docs/BACKEND_EMAIL_SETUP.md) - Complete email configuration guide
+- [Setup & Run Guide](docs/SETUP_AND_RUN.md) - Detailed setup instructions
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🌐 Deployment
+
+### Frontend (Vercel / Netlify)
+1. Push frontend folder to GitHub
+2. Connect to Vercel/Netlify
+3. Deploy
+
+### Backend (Heroku / Railway / Render)
+1. Push backend folder to GitHub
+2. Set environment variables on platform
+3. Deploy
+
+## 📝 Features
+
+- ✅ Responsive design across all devices
+- ✅ Smooth animations & transitions
+- ✅ 3D background canvas
+- ✅ Dark/light theme support
+- ✅ Contact form with email validation
+- ✅ Projects portfolio
+- ✅ Skills showcase
+- ✅ About section with profile photo
+
+## 🎯 Next Steps
+
+1. **Update your info:**
+   - Edit `frontend/src/components/Hero.tsx` - Change name & roles
+   - Edit `frontend/src/components/About.tsx` - Update bio
+   - Edit `frontend/src/components/Projects.tsx` - Add your projects
+   - Edit `frontend/src/components/Skills.tsx` - Update skills
+
+2. **Configure email:**
+   - Create `backend/.env` with Gmail credentials
+   - See [Backend Setup Guide](docs/BACKEND_EMAIL_SETUP.md)
+
+3. **Run locally:**
+   - Start frontend and backend servers
+   - Test contact form at http://localhost:8080
+
+4. **Deploy:**
+   - Push to GitHub
+   - Deploy frontend and backend separately
+   - Update frontend API URL for production
+
+## 📞 Support
+
+For issues or questions, refer to the documentation in `/docs` folder.
+
+## 📄 License
+
+MIT
+
+---
+
+**Built with ❤️ by Kushal**
