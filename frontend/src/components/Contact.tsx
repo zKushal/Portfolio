@@ -24,28 +24,6 @@ const Contact = () => {
     }));
   };
 
-  const validateEmail = async (email: string): Promise<boolean> => {
-    try {
-      setStatus("validating");
-      const response = await fetch(`${API_URL}/validate-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email }),
-      });
-
-      const data = await response.json();
-      return data.valid;
-    } catch (error) {
-      console.error("Email validation error:", error);
-      setStatus("error");
-      setStatusMessage("Failed to validate email. Please try again.");
-      setTimeout(() => setStatus("idle"), 3000);
-      return false;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -56,9 +34,9 @@ const Contact = () => {
       return;
     }
 
-    // Validate email first
-    const isValidEmail = await validateEmail(formData.email);
-    if (!isValidEmail) {
+    // Basic email format validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
       setStatus("error");
       setStatusMessage("Please enter a valid email address");
       setTimeout(() => setStatus("idle"), 3000);
@@ -68,7 +46,7 @@ const Contact = () => {
     setStatus("loading");
 
     try {
-      const response = await fetch(`${API_URL}/send-email`, {
+      const response = await fetch(`${API_URL}/submit-form`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -80,9 +58,9 @@ const Contact = () => {
 
       if (data.success) {
         setStatus("success");
-        setStatusMessage("Message sent successfully! I'll get back to you soon.");
+        setStatusMessage("Message sent! Please check your email to verify.");
         setFormData({ name: "", email: "", subject: "", message: "" });
-        setTimeout(() => setStatus("idle"), 3000);
+        setTimeout(() => setStatus("idle"), 5000);
       } else {
         setStatus("error");
         setStatusMessage(data.message || "Failed to send message. Please try again later.");
@@ -91,7 +69,7 @@ const Contact = () => {
     } catch (error) {
       console.error("Error sending email:", error);
       setStatus("error");
-      setStatusMessage("Failed to send message. Please try again later.");
+      setStatusMessage("Failed to send message. Backend is not running.");
       setTimeout(() => setStatus("idle"), 3000);
     }
   };

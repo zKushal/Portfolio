@@ -14,13 +14,17 @@ Portfolio/
 │   └── ...
 │
 ├── backend/               # Node.js + Express API server
-│   ├── server.js
+│   ├── server.js          # Main server with contact form API
+│   ├── schema.sql         # MySQL database schema
 │   ├── package.json
 │   ├── .env               # (You need to create this)
 │   └── .env.example
 │
 ├── docs/                  # Documentation & guides
+│   ├── API_REFERENCE.md
+│   ├── SECURE_CONTACT_API.md
 │   ├── BACKEND_EMAIL_SETUP.md
+│   ├── TESTING_GUIDE.md
 │   ├── EMAILJS_SETUP.md
 │   └── SETUP_AND_RUN.md
 │
@@ -29,7 +33,7 @@ Portfolio/
 
 ## 🚀 Quick Start (3 Commands)
 
-### Step 1: Setup Backend Email (.env)
+### Step 1: Setup Database + Backend Email
 
 Create `backend/.env`:
 ```env
@@ -38,6 +42,20 @@ SMTP_PORT=587
 SENDER_EMAIL=kushalbhandari803@gmail.com
 SENDER_PASSWORD=your-16-char-app-password
 PORT=5000
+
+# Database Configuration
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=k4sh@L1014
+DB_NAME=portfolio
+
+# Email Verification
+VERIFICATION_LINK_BASE=http://localhost:8080/verify
+```
+
+**Setup MySQL Database:**
+```bash
+mysql -u root -p < backend/schema.sql
 ```
 
 [Get Gmail App Password →](docs/BACKEND_EMAIL_SETUP.md)
@@ -62,6 +80,8 @@ npm run dev
 
 **Backend runs on:** `http://localhost:5000`
 
+---
+
 ## 📋 Available Commands
 
 ### Frontend
@@ -83,6 +103,8 @@ npm run dev        # Start with auto-reload (nodemon)
 npm start          # Start production
 ```
 
+---
+
 ## 🛠 Tech Stack
 
 ### Frontend
@@ -98,20 +120,83 @@ npm start          # Start production
 - Node.js
 - Express.js
 - Nodemailer
+- MySQL2
 - CORS
 
-## 📧 Contact Form Features
+---
 
-✅ **Email Validation** - Checks if email domain exists  
-✅ **Direct Sending** - Sends emails to kushalbhandari803@gmail.com  
-✅ **Reply Support** - You can reply directly to user's email  
-✅ **User Feedback** - Shows success/error messages  
-✅ **Secure** - Validates all inputs before sending  
+## 📧 Secure Contact Form API
+
+### Features
+
+✅ **Two-Step Email Verification** - Prevents spam and fake submissions  
+✅ **MySQL Database** - Persists messages and verification status  
+✅ **Cryptographic Tokens** - Secure 64-character tokens  
+✅ **SMTP Email** - Direct Gmail integration  
+✅ **Input Validation** - All fields validated  
+✅ **Error Handling** - Graceful error responses  
+✅ **CORS Enabled** - Frontend integration ready  
+
+### Endpoints
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| POST | `/api/submit-form` | Submit contact form & send verification email |
+| GET | `/api/verify-email?token=...` | Verify email, send message to recipient, delete record |
+| GET | `/api/health` | Health check |
+
+### Email Flow
+
+```
+1. User submits form
+         ↓
+2. POST /api/submit-form (validate & save to DB)
+         ↓
+3. Verification email sent to user's email
+         ↓
+4. User clicks verification link
+         ↓
+5. GET /api/verify-email?token=... (called from email link)
+         ↓
+6. Message forwarded to kushalbhandari803@gmail.com
+         ↓
+7. Message deleted from database
+```
+
+### Example Request
+
+```bash
+curl -X POST http://localhost:5000/api/submit-form \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "subject": "Project Inquiry",
+    "message": "I am interested in your services."
+  }'
+```
+
+### Example Response
+
+```json
+{
+  "success": true,
+  "message": "Message received! Check your email to verify.",
+  "messageId": 1
+}
+```
+
+---
 
 ## 📚 Documentation
 
-- [Backend Email Setup](docs/BACKEND_EMAIL_SETUP.md) - Complete email configuration guide
-- [Setup & Run Guide](docs/SETUP_AND_RUN.md) - Detailed setup instructions
+- **[API Reference](docs/API_REFERENCE.md)** - Complete API documentation
+- **[Secure Contact API](docs/SECURE_CONTACT_API.md)** - Setup and deployment guide
+- **[Testing Guide](docs/TESTING_GUIDE.md)** - Test cases and examples
+- **[Backend Email Setup](docs/BACKEND_EMAIL_SETUP.md)** - Gmail configuration
+- **[Setup & Run](docs/SETUP_AND_RUN.md)** - Detailed setup instructions
+
+---
 
 ## 🌐 Deployment
 
@@ -125,45 +210,73 @@ npm start          # Start production
 2. Set environment variables on platform
 3. Deploy
 
+### Database (AWS RDS / PlanetScale)
+1. Create hosted MySQL database
+2. Update DB_HOST and credentials in .env
+3. Run schema.sql on hosted database
+
+---
+
 ## 📝 Features
 
 - ✅ Responsive design across all devices
 - ✅ Smooth animations & transitions
 - ✅ 3D background canvas
-- ✅ Dark/light theme support
-- ✅ Contact form with email validation
+- ✅ Dark theme
+- ✅ Secure contact form with email verification
 - ✅ Projects portfolio
 - ✅ Skills showcase
 - ✅ About section with profile photo
 
+---
+
 ## 🎯 Next Steps
 
-1. **Update your info:**
-   - Edit `frontend/src/components/Hero.tsx` - Change name & roles
-   - Edit `frontend/src/components/About.tsx` - Update bio
-   - Edit `frontend/src/components/Projects.tsx` - Add your projects
-   - Edit `frontend/src/components/Skills.tsx` - Update skills
+### 1. Update Your Info
 
-2. **Configure email:**
-   - Create `backend/.env` with Gmail credentials
-   - See [Backend Setup Guide](docs/BACKEND_EMAIL_SETUP.md)
+- **Hero Section:** Edit `frontend/src/components/Hero.tsx`
+- **About Section:** Edit `frontend/src/components/About.tsx`
+- **Projects:** Edit `frontend/src/components/Projects.tsx`
+- **Skills:** Edit `frontend/src/components/Skills.tsx`
 
-3. **Run locally:**
-   - Start frontend and backend servers
-   - Test contact form at http://localhost:8080
+### 2. Configure Email
 
-4. **Deploy:**
-   - Push to GitHub
-   - Deploy frontend and backend separately
-   - Update frontend API URL for production
+- Create `backend/.env` with Gmail credentials
+- See [Backend Setup Guide](docs/BACKEND_EMAIL_SETUP.md)
+
+### 3. Run Locally
+
+- Start frontend: `cd frontend && npm run dev`
+- Start backend: `cd backend && npm run dev`
+- Visit http://localhost:8080
+- Test contact form
+
+### 4. Deploy
+
+- Push to GitHub
+- Deploy frontend and backend separately
+- Update `VERIFICATION_LINK_BASE` for production URL
+
+---
+
+## 🔒 Security
+
+- ✅ Email verification prevents spam
+- ✅ SQL injection protection (parameterized queries)
+- ✅ Credentials in .env (not in code)
+- ✅ Unique verification tokens (cryptographic)
+- ✅ CORS enabled
+- ✅ Input validation on all fields
+
+---
 
 ## 📞 Support
 
-For issues or questions, refer to the documentation in `/docs` folder.
-
-## 📄 License
-
-MIT
+See documentation in `/docs` folder for:
+- Setup instructions
+- API reference
+- Testing guide
+- Troubleshooting
 
 ---
 
