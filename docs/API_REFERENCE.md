@@ -2,15 +2,14 @@
 
 ## 📋 Summary
 
-A secure, production-ready Node.js/Express API for handling portfolio contact forms with **email verification**, **MySQL database integration**, and **SMTP email sending**.
+A secure, production-ready Node.js/Express API for handling portfolio contact forms with **email verification**, **Turso database integration**, and **SMTP email sending**.
 
 **Key Features:**
 - ✅ Two-step email verification process
-- ✅ MySQL database persistence  
+- ✅ Turso (libSQL) database persistence  
 - ✅ Secure token generation (cryptographic)
 - ✅ Input validation & error handling
 - ✅ CORS-enabled for frontend integration
-- ✅ Graceful database connection management
 - ✅ Production-ready error responses
 
 ---
@@ -44,11 +43,9 @@ A secure, production-ready Node.js/Express API for handling portfolio contact fo
          │
          ▼
 ┌─────────────────────────────────────────────────────────┐
-│            MYSQL DATABASE                               │
-│    Host: localhost                                      │
-│    Database: portfolio                                  │
+│            TURSO DATABASE (libSQL)                      │
+│    URL: libsql://your-database.turso.io                 │
 │    Table: UserMessage                                   │
-│    User: root / Password: k4sh@L1014                    │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -60,8 +57,8 @@ A secure, production-ready Node.js/Express API for handling portfolio contact fo
 |-------|-----------|---------|---------|
 | Runtime | Node.js | 24.11.1 | JavaScript runtime |
 | Framework | Express.js | 4.18.2 | Web server framework |
-| Database | MySQL | 8.0+ | Data persistence |
-| Driver | mysql2 | 3.6.5 | MySQL connection pool |
+| Database | Turso (libSQL) | latest | Serverless data persistence |
+| Driver | @libsql/client | 0.17.0 | Turso/libSQL connection |
 | Email | Nodemailer | 6.9.7 | SMTP email sending |
 | Security | dotenv | 16.3.1 | Environment configuration |
 | Utilities | crypto | native | Token generation |
@@ -294,38 +291,32 @@ You can reply directly to this email to respond to the user.
 ### UserMessage Table
 
 ```sql
-CREATE TABLE UserMessage (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  name VARCHAR(100) NOT NULL,
-  email VARCHAR(100) NOT NULL,
-  subject VARCHAR(200) NOT NULL,
-  message LONGTEXT NOT NULL,
-  verification_token VARCHAR(255) UNIQUE NOT NULL,
-  verified TINYINT(1) DEFAULT 0,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  verified_at TIMESTAMP NULL,
-  INDEX idx_token (verification_token),
-  INDEX idx_verified (verified),
-  INDEX idx_created_at (created_at)
+CREATE TABLE IF NOT EXISTS UserMessage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  token TEXT UNIQUE NOT NULL,
+  created_at TEXT NOT NULL
 );
+CREATE INDEX IF NOT EXISTS idx_token ON UserMessage (token);
+CREATE INDEX IF NOT EXISTS idx_created_at ON UserMessage (created_at);
 ```
 
 **Columns:**
 | Column | Type | Description |
 |--------|------|-------------|
-| `id` | INT | Auto-increment primary key |
-| `name` | VARCHAR(100) | Sender's name |
-| `email` | VARCHAR(100) | Sender's email address |
-| `subject` | VARCHAR(200) | Message subject |
-| `message` | LONGTEXT | Message content (unlimited length) |
-| `verification_token` | VARCHAR(255) | Unique 64-char token for verification |
-| `verified` | TINYINT(1) | 0 = unverified, 1 = verified |
-| `created_at` | TIMESTAMP | Submission date/time |
-| `verified_at` | TIMESTAMP | Verification date/time (optional) |
+| `id` | INTEGER | Auto-increment primary key |
+| `name` | TEXT | Sender's name |
+| `email` | TEXT | Sender's email address |
+| `subject` | TEXT | Message subject |
+| `message` | TEXT | Message content |
+| `token` | TEXT | Unique 64-char verification token |
+| `created_at` | TEXT | Submission date/time (UTC) |
 
 **Indexes:**
-- `verification_token` (UNIQUE) - Fast token lookup, prevents duplicates
-- `verified` - Filter pending messages
+- `token` (UNIQUE) - Fast token lookup, prevents duplicates
 - `created_at` - Sort by submission date
 
 ---
@@ -445,11 +436,9 @@ SENDER_PASSWORD=your-app-specific-password
 # Server Configuration
 PORT=5000
 
-# Database Configuration
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=k4sh@L1014
-DB_NAME=portfolio
+# Turso Database Configuration
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-turso-auth-token
 
 # Email Verification
 VERIFICATION_LINK_BASE=http://localhost:8080/verify
@@ -459,10 +448,27 @@ VERIFICATION_LINK_BASE=http://localhost:8080/verify
 
 ## 🚀 Quick Start
 
-### 1. Setup Database
+### 1. Create Turso Database
 
 ```bash
-mysql -u root -p < backend/schema.sql
+turso db create portfolio
+turso db show portfolio
+turso db tokens create portfolio
+```
+
+Create the table in the Turso shell:
+```sql
+CREATE TABLE IF NOT EXISTS UserMessage (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  token TEXT UNIQUE NOT NULL,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_token ON UserMessage (token);
+CREATE INDEX IF NOT EXISTS idx_created_at ON UserMessage (created_at);
 ```
 
 ### 2. Install Dependencies
@@ -526,9 +532,9 @@ Stop-Process -Name node -Force
 ```
 
 ### Database Connection Failed
-```bash
-mysql -u root -p -e "SELECT 1;"
-```
+- Verify `TURSO_DATABASE_URL` is correct (e.g., `libsql://your-db.turso.io`)
+- Verify `TURSO_AUTH_TOKEN` is a valid Turso auth token
+- Ensure the `UserMessage` table has been created in your Turso database
 
 ### Verification Email Not Received
 - Check SENDER_PASSWORD is Google App Password
