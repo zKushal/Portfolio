@@ -1,60 +1,46 @@
 # 📚 Documentation
 
-Quick reference for setting up and using your portfolio API.
+Quick reference for setting up and running the portfolio.
 
 ## 📖 Documentation Files
 
 | Document | Purpose |
 |----------|---------|
-| **[API_REFERENCE.md](API_REFERENCE.md)** | Complete API specification with all endpoints and examples |
-| **[BACKEND_EMAIL_SETUP.md](BACKEND_EMAIL_SETUP.md)** | Gmail SMTP configuration guide |
+| **[EMAILJS_SETUP.md](EMAILJS_SETUP.md)** | EmailJS configuration guide (contact form) |
+| **[API_REFERENCE.md](API_REFERENCE.md)** | Backend API specification (optional) |
+| **[BACKEND_EMAIL_SETUP.md](BACKEND_EMAIL_SETUP.md)** | Backend Gmail SMTP guide (optional) |
 | **[SETUP_AND_RUN.md](SETUP_AND_RUN.md)** | Getting started guide |
 
 ## 🚀 Quick Start
 
-### 1. Configure External Database
+### 1. Configure EmailJS (Contact Form)
 
-Update `backend/.env`:
+Create `frontend/.env` from `frontend/.env.example`:
 ```env
-DB_HOST=your-external-db-host
-DB_PORT=3306
-DB_USER=your-db-username
-DB_PASSWORD=your-db-password
-DB_NAME=UserMessage
+VITE_EMAILJS_SERVICE_ID=service_xxxxxxx
+VITE_EMAILJS_TEMPLATE_ID=template_xxxxxxx
+VITE_EMAILJS_PUBLIC_KEY=your_public_key
 ```
 
-### 2. Configure Email
+See **[EMAILJS_SETUP.md](EMAILJS_SETUP.md)** for the full setup guide.
 
-```env
-SENDER_EMAIL=kushalbhandari803@gmail.com
-SENDER_PASSWORD=your-app-password
-```
-
-### 3. Start Servers
+### 2. Start Frontend
 
 ```bash
-# Terminal 1 - Backend
-cd backend && npm run dev
-
-# Terminal 2 - Frontend  
 cd frontend && npm run dev
 ```
 
-## 📊 API Quick Reference
+## 📬 Contact Form Flow
 
-**Endpoints:**
-- `POST /api/submit-form` - Submit contact form
-- `GET /api/verify-email?token=...` - Verify email and send message
-- `GET /api/health` - Health check
+The contact form uses **EmailJS** — a client-side email service that works from any network without a backend:
 
-**Email Verification Flow:**
 ```
-Submit Form → Verification Email → User Clicks Link → Message Sent → Record Deleted
+User fills form → Email validated → EmailJS sends message → Toast notification shown
 ```
 
 ## 🔍 Need Help?
 
-- **API Details** → [API_REFERENCE.md](API_REFERENCE.md)
-- **Email Setup** → [BACKEND_EMAIL_SETUP.md](BACKEND_EMAIL_SETUP.md)
+- **EmailJS Setup** → [EMAILJS_SETUP.md](EMAILJS_SETUP.md)
 - **Getting Started** → [SETUP_AND_RUN.md](SETUP_AND_RUN.md)
+- **Backend (optional)** → [BACKEND_EMAIL_SETUP.md](BACKEND_EMAIL_SETUP.md)
 

@@ -1,20 +1,24 @@
 import { useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { Mail, MapPin, Send, Github, Linkedin, Twitter, Facebook, Instagram } from "lucide-react";
+import emailjs from "@emailjs/browser";
+import { useToast } from "@/hooks/use-toast";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID as string;
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID as string;
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY as string;
 
 const Contact = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: "-100px" });
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     subject: "",
     message: ""
   });
-  const [status, setStatus] = useState<"idle" | "validating" | "loading" | "success" | "error">("idle");
-  const [statusMessage, setStatusMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "loading">("idle");
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -28,49 +32,64 @@ const Contact = () => {
     e.preventDefault();
 
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
-      setStatus("error");
-      setStatusMessage("Please fill in all fields");
-      setTimeout(() => setStatus("idle"), 3000);
+      toast({
+        variant: "destructive",
+        title: "Missing fields",
+        description: "Please fill in all fields.",
+      });
       return;
     }
 
     // Basic email format validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
-      setStatus("error");
-      setStatusMessage("Please enter a valid email address");
-      setTimeout(() => setStatus("idle"), 3000);
+      toast({
+        variant: "destructive",
+        title: "Invalid email",
+        description: "Please enter a valid email address.",
+      });
       return;
     }
 
     setStatus("loading");
 
-    try {
-      const response = await fetch(`${API_URL}/submit-form`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
+    if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+      toast({
+        variant: "destructive",
+        title: "Configuration error",
+        description: "Email service is not configured. Please contact me directly.",
       });
+      setStatus("idle");
+      return;
+    }
 
-      const data = await response.json();
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          from_name: formData.name,
+          from_email: formData.email,
+          subject: formData.subject,
+          message: formData.message,
+        },
+        EMAILJS_PUBLIC_KEY
+      );
 
-      if (data.success) {
-        setStatus("success");
-        setStatusMessage("Message sent! Please check your email to verify.");
-        setFormData({ name: "", email: "", subject: "", message: "" });
-        setTimeout(() => setStatus("idle"), 5000);
-      } else {
-        setStatus("error");
-        setStatusMessage(data.message || "Failed to send message. Please try again later.");
-        setTimeout(() => setStatus("idle"), 3000);
-      }
+      toast({
+        title: "Message sent!",
+        description: "Your message has been sent successfully. I'll get back to you soon.",
+      });
+      setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
       console.error("Error sending email:", error);
-      setStatus("error");
-      setStatusMessage("Failed to send message. Backend is not running.");
-      setTimeout(() => setStatus("idle"), 3000);
+      toast({
+        variant: "destructive",
+        title: "Failed to send",
+        description: "Failed to send your message. Please try again later.",
+      });
+    } finally {
+      setStatus("idle");
     }
   };
 
@@ -198,22 +217,6 @@ const Contact = () => {
                 onChange={handleChange}
                 className="w-full px-4 py-3 bg-muted border border-border rounded-lg text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary transition-colors resize-none"
               />
-              
-              {status !== "idle" && (
-                <motion.div
-                  initial={{ opacity: 0, y: -10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`p-3 rounded-lg text-sm font-medium ${
-                    status === "success"
-                      ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                      : status === "error"
-                      ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                      : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
-                  }`}
-                >
-                  {statusMessage}
-                </motion.div>
-              )}
               
               <button
                 type="submit"
