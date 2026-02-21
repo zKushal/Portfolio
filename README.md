@@ -43,22 +43,15 @@ SENDER_EMAIL=kushalbhandari803@gmail.com
 SENDER_PASSWORD=your-16-char-app-password
 PORT=5000
 
-# Database Configuration
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=k4sh@L1014
-DB_NAME=portfolio
+# Turso Database Configuration
+TURSO_DATABASE_URL=libsql://your-database.turso.io
+TURSO_AUTH_TOKEN=your-turso-auth-token
 
 # Email Verification
 VERIFICATION_LINK_BASE=http://localhost:8080/verify
 ```
 
-**Setup MySQL Database:**
-```bash
-mysql -u root -p < backend/schema.sql
-```
-
-[Get Gmail App Password →](docs/BACKEND_EMAIL_SETUP.md)
+[Get a Turso database →](https://turso.tech)
 
 ### Step 2: Start Frontend
 
@@ -120,7 +113,7 @@ npm start          # Start production
 - Node.js
 - Express.js
 - Nodemailer
-- MySQL2
+- Turso (libSQL)
 - CORS
 
 ---
@@ -130,7 +123,7 @@ npm start          # Start production
 ### Features
 
 ✅ **Two-Step Email Verification** - Prevents spam and fake submissions  
-✅ **MySQL Database** - Persists messages and verification status  
+✅ **Turso Database** - Serverless SQLite with global replication  
 ✅ **Cryptographic Tokens** - Secure 64-character tokens  
 ✅ **SMTP Email** - Direct Gmail integration  
 ✅ **Input Validation** - All fields validated  
@@ -210,10 +203,10 @@ curl -X POST http://localhost:5000/api/submit-form \
 2. Set environment variables on platform
 3. Deploy
 
-### Database (AWS RDS / PlanetScale)
-1. Create hosted MySQL database
-2. Update DB_HOST and credentials in .env
-3. Run schema.sql on hosted database
+### Database (Turso)
+1. Create a Turso database at [turso.tech](https://turso.tech)
+2. Set `TURSO_DATABASE_URL` and `TURSO_AUTH_TOKEN` in `.env`
+3. The table is created automatically on first startup
 
 ---
 
