@@ -1,5 +1,5 @@
 import express from 'express';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import admin from 'firebase-admin';
@@ -53,15 +53,13 @@ function initializeFirebase() {
 initializeFirebase();
 
 // ============ EMAIL CONFIGURATION ============
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST || 'smtp.gmail.com',
-  port: process.env.SMTP_PORT || 587,
-  secure: false,
-  auth: {
-    user: process.env.SENDER_EMAIL,
-    pass: process.env.SENDER_PASSWORD,
-  },
-});
+const resendApiKey = process.env.RESEND_API_KEY;
+if (!resendApiKey) {
+  console.warn('⚠️ RESEND_API_KEY is not set. Email sending will fail.');
+}
+
+const resend = new Resend(resendApiKey);
+const RESEND_FROM = process.env.RESEND_FROM || 'onboarding@resend.dev';
 
 const RECIPIENT_EMAIL = 'kushalbhandari803@gmail.com';
 const VERIFICATION_LINK_BASE = process.env.VERIFICATION_LINK_BASE || 'http://localhost:8080/verify';
@@ -162,8 +160,8 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
   try {
     const verificationLink = `${VERIFICATION_LINK_BASE}?token=${verificationToken}`;
 
-    const mailOptions = {
-      from: process.env.SENDER_EMAIL,
+    const { data, error } = await resend.emails.send({
+      from: RESEND_FROM,
       to: email,
       subject: 'Verify Your Message',
       html: `
@@ -193,10 +191,13 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
         
         If you did not submit this form, please ignore this email.
       `,
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Verification email sent:', info.messageId);
+    if (error) {
+      throw error;
+    }
+
+    console.log('Verification email sent:', data?.id || 'ok');
     return { success: true };
   } catch (error) {
     console.error('Verification email error:', error);
@@ -206,8 +207,8 @@ const sendVerificationEmail = async (email, name, verificationToken) => {
 
 const sendFinalEmail = async (name, userEmail, subject, message) => {
   try {
-    const mailOptions = {
-      from: process.env.SENDER_EMAIL,
+    const { data, error } = await resend.emails.send({
+      from: RESEND_FROM,
       to: RECIPIENT_EMAIL,
       replyTo: userEmail,
       subject: `Contact Form: ${subject}`,
@@ -234,10 +235,13 @@ const sendFinalEmail = async (name, userEmail, subject, message) => {
         
         You can reply directly to this email to respond to the user.
       `,
-    };
+    });
 
-    const info = await transporter.sendMail(mailOptions);
-    console.log('Final email sent to recipient:', info.messageId);
+    if (error) {
+      throw error;
+    }
+
+    console.log('Final email sent to recipient:', data?.id || 'ok');
     return { success: true };
   } catch (error) {
     console.error('Final email error:', error);
