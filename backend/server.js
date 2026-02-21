@@ -2,7 +2,7 @@ import express from 'express';
 import nodemailer from 'nodemailer';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import mysql from 'mysql2/promise';
+import { createClient } from '@libsql/client';
 import crypto from 'crypto';
 
 dotenv.config();
@@ -14,21 +14,31 @@ app.use(cors());
 app.use(express.json());
 
 // ============ DATABASE CONFIGURATION ============
-const pool = mysql.createPool({
-  host: process.env.DB_HOST,
-  port: process.env.DB_PORT || 3306,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME || 'UserMessage',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+if (!process.env.TURSO_DATABASE_URL || !process.env.TURSO_AUTH_TOKEN) {
+  console.error('❌ Missing required environment variables: TURSO_DATABASE_URL and TURSO_AUTH_TOKEN');
+  process.exit(1);
+}
+
+const db = createClient({
+  url: process.env.TURSO_DATABASE_URL,
+  authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
-// Test database connection on startup
-pool.getConnection().then(conn => {
-  console.log('✅ Connected to external MySQL database');
-  conn.release();
+const CREATE_TABLE_SQL = `
+  CREATE TABLE IF NOT EXISTS UserMessage (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    email TEXT NOT NULL,
+    subject TEXT NOT NULL,
+    message TEXT NOT NULL,
+    token TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  )
+`;
+
+// Ensure table exists on startup
+db.execute(CREATE_TABLE_SQL).then(() => {
+  console.log('✅ Connected to Turso database');
 }).catch(err => {
   console.error('❌ Database connection failed:', err.message);
   process.exit(1);
@@ -86,16 +96,12 @@ const validateFormData = (data) => {
 // ============ DATABASE OPERATIONS ============
 const saveMessageToDatabase = async (name, email, subject, message, token) => {
   try {
-    const connection = await pool.getConnection();
+    const result = await db.execute({
+      sql: 'INSERT INTO UserMessage (name, email, subject, message, token, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      args: [name, email, subject, message, token, new Date().toISOString()],
+    });
 
-    const query =
-      'INSERT INTO UserMessage (name, email, subject, message, token, created_at) VALUES (?, ?, ?, ?, ?, NOW())';
-
-    const result = await connection.execute(query, [name, email, subject, message, token]);
-
-    connection.release();
-
-    return { success: true, messageId: result[0].insertId };
+    return { success: true, messageId: Number(result.lastInsertRowid) };
   } catch (error) {
     console.error('Database save error:', error);
     throw error;
@@ -104,15 +110,12 @@ const saveMessageToDatabase = async (name, email, subject, message, token) => {
 
 const getMessageByToken = async (token) => {
   try {
-    const connection = await pool.getConnection();
+    const result = await db.execute({
+      sql: 'SELECT * FROM UserMessage WHERE token = ? LIMIT 1',
+      args: [token],
+    });
 
-    const query = 'SELECT * FROM UserMessage WHERE token = ? LIMIT 1';
-
-    const [rows] = await connection.execute(query, [token]);
-
-    connection.release();
-
-    return rows.length > 0 ? rows[0] : null;
+    return result.rows.length > 0 ? result.rows[0] : null;
   } catch (error) {
     console.error('Database query error:', error);
     throw error;
@@ -121,13 +124,10 @@ const getMessageByToken = async (token) => {
 
 const deleteMessageFromDatabase = async (messageId) => {
   try {
-    const connection = await pool.getConnection();
-
-    const query = 'DELETE FROM UserMessage WHERE id = ?';
-
-    await connection.execute(query, [messageId]);
-
-    connection.release();
+    await db.execute({
+      sql: 'DELETE FROM UserMessage WHERE id = ?',
+      args: [messageId],
+    });
 
     return { success: true };
   } catch (error) {
@@ -347,6 +347,5 @@ app.listen(PORT, () => {
 // Graceful shutdown
 process.on('SIGINT', async () => {
   console.log('\n🛑 Server shutting down...');
-  await pool.end();
   process.exit(0);
 });
