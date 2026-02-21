@@ -1,0 +1,11 @@
+{
+  "services": [
+    {
+      "name": "backend",
+      "runtime": "node",
+      "buildCommand": "npm install",
+      "startCommand": "npm start",
+      "envVars": []
+    }
+  ]
+}
