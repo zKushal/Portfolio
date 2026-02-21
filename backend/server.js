@@ -10,8 +10,14 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: false
+}));
 app.use(express.json());
+app.options('*', cors());
 
 // ============ DATABASE CONFIGURATION ============
 const pool = mysql.createPool({
@@ -62,19 +68,27 @@ const validateFormData = (data) => {
   const errors = [];
 
   if (!data.name || typeof data.name !== 'string' || data.name.trim().length === 0) {
-    errors.push('Name is required and must be a non-empty string');
+    errors.push('Name is required');
+  } else if (data.name.trim().length < 2) {
+    errors.push('Name must be at least 2 characters');
   }
 
   if (!data.email || !validateEmail(data.email)) {
-    errors.push('Valid email is required');
+    errors.push('Valid email address is required');
   }
 
   if (!data.subject || typeof data.subject !== 'string' || data.subject.trim().length === 0) {
-    errors.push('Subject is required and must be a non-empty string');
+    errors.push('Subject is required');
+  } else if (data.subject.trim().length < 3) {
+    errors.push('Subject must be at least 3 characters');
   }
 
   if (!data.message || typeof data.message !== 'string' || data.message.trim().length === 0) {
-    errors.push('Message is required and must be a non-empty string');
+    errors.push('Message is required');
+  } else if (data.message.trim().length < 10) {
+    errors.push('Message must be at least 10 characters');
+  } else if (data.message.trim().length > 5000) {
+    errors.push('Message must not exceed 5000 characters');
   }
 
   return {
@@ -254,11 +268,26 @@ app.post('/api/submit-form', async (req, res) => {
     const dbResult = await saveMessageToDatabase(name, email, subject, message, verificationToken);
 
     if (!dbResult.success) {
-      throw new Error('Failed to save message to database');
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to save message. Please try again.',
+        errors: ['Database error: Could not save your message'],
+      });
     }
 
     // Send verification email
-    await sendVerificationEmail(email, name, verificationToken);
+    try {
+      await sendVerificationEmail(email, name, verificationToken);
+    } catch (emailError) {
+      console.error('Email sending failed:', emailError);
+      // Delete the saved message if email sending fails
+      await deleteMessageFromDatabase(dbResult.messageId);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send verification email',
+        errors: ['Could not send verification email. Please check your email address and try again.'],
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -270,7 +299,7 @@ app.post('/api/submit-form', async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error processing your request',
-      error: error.message,
+      errors: ['An unexpected error occurred. Please try again later.'],
     });
   }
 });
@@ -284,6 +313,7 @@ app.get('/api/verify-email', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: 'Verification token is required',
+        errors: ['No verification token provided'],
       });
     }
 
@@ -294,25 +324,41 @@ app.get('/api/verify-email', async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Invalid or expired verification token',
+        errors: ['The verification link has expired or is invalid. Please submit the form again.'],
       });
     }
 
     // Send final email to recipient
-    await sendFinalEmail(message.name, message.email, message.subject, message.message);
+    try {
+      await sendFinalEmail(message.name, message.email, message.subject, message.message);
+    } catch (emailError) {
+      console.error('Final email sending failed:', emailError);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to send your message',
+        errors: ['Could not send your message to the recipient. Please try again.'],
+      });
+    }
 
     // Delete message from database
-    await deleteMessageFromDatabase(message.id);
+    try {
+      await deleteMessageFromDatabase(message.id);
+    } catch (deleteError) {
+      console.error('Database cleanup error:', deleteError);
+      // Still return success since the email was sent
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Email verified and message sent successfully!',
+      message: 'Email verified! Your message has been sent successfully.',
+      errors: [],
     });
   } catch (error) {
     console.error('Verify email error:', error);
     res.status(500).json({
       success: false,
       message: 'Error verifying your email',
-      error: error.message,
+      errors: ['An unexpected error occurred. Please try again.'],
     });
   }
 });

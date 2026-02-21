@@ -29,10 +29,14 @@ const Verify = () => {
 
         if (response.ok && data.success) {
           setState("success");
-          setMessage("Email verified! Your message has been sent.");
+          setMessage(data.message || "Email verified! Your message has been sent successfully.");
         } else {
           setState("error");
-          const errorMsg = data.message || "Verification failed. The link may be invalid or expired.";
+          // Show specific error or fallback messages
+          let errorMsg = data.message || "Verification failed. The link may be invalid or expired.";
+          if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+            errorMsg = data.errors[0];
+          }
           setMessage(errorMsg);
         }
       } catch (error) {

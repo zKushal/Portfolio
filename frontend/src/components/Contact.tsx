@@ -27,19 +27,39 @@ const Contact = () => {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // Validate all fields are filled
     if (!formData.name || !formData.email || !formData.subject || !formData.message) {
       setStatus("error");
       setStatusMessage("Please fill in all fields");
-      setTimeout(() => setStatus("idle"), 3000);
       return;
     }
 
-    // Basic email format validation
+    // Validate name length
+    if (formData.name.trim().length < 2) {
+      setStatus("error");
+      setStatusMessage("Name must be at least 2 characters");
+      return;
+    }
+
+    // Validate email format
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(formData.email)) {
       setStatus("error");
       setStatusMessage("Please enter a valid email address");
-      setTimeout(() => setStatus("idle"), 3000);
+      return;
+    }
+
+    // Validate subject length
+    if (formData.subject.trim().length < 3) {
+      setStatus("error");
+      setStatusMessage("Subject must be at least 3 characters");
+      return;
+    }
+
+    // Validate message length
+    if (formData.message.trim().length < 10) {
+      setStatus("error");
+      setStatusMessage("Message must be at least 10 characters");
       return;
     }
 
@@ -60,7 +80,7 @@ const Contact = () => {
         setStatus("success");
         setStatusMessage("Message sent! Please check your email to verify.");
         setFormData({ name: "", email: "", subject: "", message: "" });
-        setTimeout(() => setStatus("idle"), 5000);
+        setTimeout(() => setStatus("idle"), 6000);
       } else {
         setStatus("error");
         // Display specific error messages from backend validation
@@ -68,13 +88,11 @@ const Contact = () => {
           ? data.errors.join(". ") 
           : data.message || "Failed to send message. Please try again later.";
         setStatusMessage(errorMsg);
-        setTimeout(() => setStatus("idle"), 5000);
       }
     } catch (error) {
       console.error("Error sending email:", error);
       setStatus("error");
       setStatusMessage("Failed to connect to server. Please check if the backend is running or try again later.");
-      setTimeout(() => setStatus("idle"), 5000);
     }
   };
 
