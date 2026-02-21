@@ -32,12 +32,13 @@ const Verify = () => {
           setMessage("Email verified! Your message has been sent.");
         } else {
           setState("error");
-          setMessage(data.message || "Verification failed.");
+          const errorMsg = data.message || "Verification failed. The link may be invalid or expired.";
+          setMessage(errorMsg);
         }
       } catch (error) {
         console.error("Verification error:", error);
         setState("error");
-        setMessage("Verification failed. Please try again later.");
+        setMessage("Failed to connect to server. Please check your internet connection and try again later.");
       }
     };
 

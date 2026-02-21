@@ -337,9 +337,10 @@ app.use((req, res) => {
 
 // ============ SERVER STARTUP ============
 const PORT = process.env.PORT || 5000;
+const HOST = process.env.HOST || '0.0.0.0';
 
-app.listen(PORT, () => {
-  console.log(`✅ Server running on http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+  console.log(`✅ Server running on http://${HOST}:${PORT}`);
   console.log(`📧 Emails will be sent to: ${RECIPIENT_EMAIL}`);
   console.log(`🔗 Verification link base: ${VERIFICATION_LINK_BASE}`);
 });

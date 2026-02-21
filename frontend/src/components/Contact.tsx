@@ -63,14 +63,18 @@ const Contact = () => {
         setTimeout(() => setStatus("idle"), 5000);
       } else {
         setStatus("error");
-        setStatusMessage(data.message || "Failed to send message. Please try again later.");
-        setTimeout(() => setStatus("idle"), 3000);
+        // Display specific error messages from backend validation
+        const errorMsg = data.errors && Array.isArray(data.errors) 
+          ? data.errors.join(". ") 
+          : data.message || "Failed to send message. Please try again later.";
+        setStatusMessage(errorMsg);
+        setTimeout(() => setStatus("idle"), 5000);
       }
     } catch (error) {
       console.error("Error sending email:", error);
       setStatus("error");
-      setStatusMessage("Failed to send message. Backend is not running.");
-      setTimeout(() => setStatus("idle"), 3000);
+      setStatusMessage("Failed to connect to server. Please check if the backend is running or try again later.");
+      setTimeout(() => setStatus("idle"), 5000);
     }
   };
 
