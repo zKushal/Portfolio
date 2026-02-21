@@ -23,40 +23,29 @@ app.options('*', cors());
 let db;
 
 function initializeFirebase() {
-  // Handle private key: try both formats (escaped and literal newlines)
-  let privateKey = process.env.FIREBASE_PRIVATE_KEY;
-  if (privateKey) {
-    // Replace escaped newlines \\n with actual newlines \n
-    privateKey = privateKey.replace(/\\n/g, '\n');
-  }
-
-  const serviceAccountKey = {
-    type: process.env.FIREBASE_TYPE || 'service_account',
-    project_id: process.env.FIREBASE_PROJECT_ID,
-    private_key_id: process.env.FIREBASE_PRIVATE_KEY_ID,
-    private_key: privateKey,
-    client_email: process.env.FIREBASE_CLIENT_EMAIL,
-    client_id: process.env.FIREBASE_CLIENT_ID,
-    auth_uri: process.env.FIREBASE_AUTH_URI || 'https://accounts.google.com/o/oauth2/auth',
-    token_uri: process.env.FIREBASE_TOKEN_URI || 'https://oauth2.googleapis.com/token',
-  };
-
-  // Validate required fields
-  const requiredFields = ['project_id', 'private_key', 'client_email'];
-  for (const field of requiredFields) {
-    if (!serviceAccountKey[field]) {
-      throw new Error(`Missing Firebase credential: ${field}`);
-    }
-  }
-
   try {
+    // Use base64-encoded service account JSON for better compatibility
+    const firebaseCredentials = process.env.FIREBASE_SERVICE_ACCOUNT_BASE64;
+    
+    if (!firebaseCredentials) {
+      throw new Error('FIREBASE_SERVICE_ACCOUNT_BASE64 environment variable is required');
+    }
+
+    // Decode base64 and parse JSON
+    const serviceAccountKey = JSON.parse(
+      Buffer.from(firebaseCredentials, 'base64').toString('utf-8')
+    );
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccountKey),
     });
+    
     db = admin.firestore();
     console.log('✅ Connected to Firebase Firestore');
+    console.log(`📦 Project ID: ${serviceAccountKey.project_id}`);
   } catch (err) {
     console.error('❌ Firebase initialization failed:', err.message);
+    console.error('Full error:', err);
     process.exit(1);
   }
 }
