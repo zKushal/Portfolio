@@ -107,7 +107,7 @@ const Hero = () => {
           transition={{ delay: 1.2 }}
         >
           <a
-            href="https://github.com"
+            href="https://github.com/zKushal"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
@@ -115,7 +115,7 @@ const Hero = () => {
             <Github size={22} />
           </a>
           <a
-            href="https://linkedin.com"
+            href="https://www.linkedin.com/in/kushal-bhandari-a67b5530a/"
             target="_blank"
             rel="noopener noreferrer"
             className="text-muted-foreground hover:text-primary transition-colors"
